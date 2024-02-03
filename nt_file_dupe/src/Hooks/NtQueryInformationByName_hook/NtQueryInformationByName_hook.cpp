@@ -19,10 +19,15 @@ NTSTATUS NTAPI ntfsdupe::hooks::NtQueryInformationByName_hook(
         switch (cfg->mode) {
         case ntfsdupe::cfgs::Type::hide:
         case ntfsdupe::cfgs::Type::target: { // target files are invisible to the process
+            NTFSDUPE_DBG(
+                L"ntfsdupe::hooks::NtQueryInformationByName_hook hide/target '%s'",
+                std::wstring(ObjectAttributes->ObjectName->Buffer, ObjectAttributes->ObjectName->Length / sizeof(wchar_t)).c_str()
+            );
             return STATUS_OBJECT_NAME_NOT_FOUND;
         }
 
         case ntfsdupe::cfgs::Type::original: {
+            NTFSDUPE_DBG(L"ntfsdupe::hooks::NtQueryInformationByName_hook original '%s'", cfg->original.c_str());
             // it would be cheaper to just manipulate the original str, but not sure if that's safe
             auto object_name_new = unique_ptr_stack(wchar_t, ObjectAttributes->ObjectName->Length);
             if (object_name_new) {

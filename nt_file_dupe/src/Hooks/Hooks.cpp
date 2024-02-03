@@ -163,6 +163,7 @@ NTSTATUS ntfsdupe::hooks::handle_multi_query(
         // also if original (redirected) file skip it because we should only report the target file (with fixed/restored name)
         case ntfsdupe::cfgs::Type::original:
         case ntfsdupe::cfgs::Type::hide: {
+            NTFSDUPE_DBG(L"  multi query original/hide '%s'", cfg->original.c_str());
             // if no remaining nodes, this happens at the last node
             // or at the first node when it's the only remaining one
             if (!currentNodeBytes) {
@@ -191,6 +192,7 @@ NTSTATUS ntfsdupe::hooks::handle_multi_query(
         break;
 
         case ntfsdupe::cfgs::Type::target: { // restore the original name
+            NTFSDUPE_DBG(L"  multi query target '%s'", cfg->target.c_str());
             memcpy(
                 (char*)currentNode + query_info.node_filename_offset,
                 cfg->original_filename,
@@ -248,24 +250,17 @@ namespace ntfsdupe::hooks
         { "QueryDirectoryFileEx", NtQueryDirectoryFileEx_hook, (LPVOID*)&NtQueryDirectoryFileEx_original, false },
 
     };
-
-    struct CppRt {
-
-        bool destroyed = false;
-
-        ~CppRt() {
-            ntfsdupe::hooks::deinit();
-        }
-    };
-
-    static CppRt cpp_rt{};
 }
 
 
 bool ntfsdupe::hooks::init(void)
 {
+    NTFSDUPE_DBG(L"ntfsdupe::hooks::init()");
     auto NtdllHmod = GetModuleHandleW(L"ntdll.dll");
-    if (!NtdllHmod) return false;
+    if (!NtdllHmod) {
+        NTFSDUPE_DBG(L"  failed to get ntdll.dll hmodule");
+        return false;
+    }
 
     if (DetourTransactionBegin() != NO_ERROR) return false;
     if (DetourUpdateThread(GetCurrentThread()) != NO_ERROR) return false;
@@ -276,14 +271,20 @@ bool ntfsdupe::hooks::init(void)
 
         if (!*hook_desc.original_addr ||
             (DetourAttach(hook_desc.original_addr, hook_desc.api_hook) != NO_ERROR)) {
-            if (!hook_desc.optional) return false;
+            if (!hook_desc.optional) {
+                NTFSDUPE_DBG(std::string("  failed to hook Nt") + hook_desc.api_name + "()");
+                return false;
+            }
         }
 
     }
 
     LdrLoadDll_original = (decltype(LdrLoadDll_original))GetProcAddress(NtdllHmod, "LdrLoadDll");
     if (!LdrLoadDll_original ||
-        (DetourAttach(&LdrLoadDll_original, LdrLoadDll_hook) != NO_ERROR)) return false;
+        (DetourAttach(&LdrLoadDll_original, LdrLoadDll_hook) != NO_ERROR)) {
+            NTFSDUPE_DBG(L"  failed to hook LdrLoadDll()");
+            return false;
+        }
 
     return DetourTransactionCommit() == NO_ERROR;
 }
@@ -291,9 +292,7 @@ bool ntfsdupe::hooks::init(void)
 
 void ntfsdupe::hooks::deinit(void)
 {
-    if (cpp_rt.destroyed) return;
-
-    cpp_rt.destroyed = true;
+    NTFSDUPE_DBG(L"ntfsdupe::hooks::deinit()");
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
 

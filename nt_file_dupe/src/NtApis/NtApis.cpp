@@ -1,4 +1,5 @@
 #include "NtApis/NtApis.hpp"
+#include "Helpers/dbglog.hpp"
 
 #include <malloc.h>
 #include <unordered_set>
@@ -71,24 +72,40 @@ namespace ntfsdupe::ntapis {
 
 bool ntfsdupe::ntapis::init(void)
 {
+    NTFSDUPE_DBG(L"ntfsdupe::ntapis::init()");
     auto NtdllHmod = GetModuleHandleW(L"ntdll.dll");
-    if (!NtdllHmod) return false;
+    if (!NtdllHmod) {
+        NTFSDUPE_DBG(L"  failed to get ntdll.dll hmodule");
+        return false;
+    }
 
     RtlNtPathNameToDosPathName_original = (decltype(RtlNtPathNameToDosPathName_original))GetProcAddress(NtdllHmod, "RtlNtPathNameToDosPathName");
-    if (!RtlNtPathNameToDosPathName_original) return false;
+    if (!RtlNtPathNameToDosPathName_original) {
+        NTFSDUPE_DBG(L"  failed to get addr of RtlNtPathNameToDosPathName");
+        return false;
+    }
 
     RtlGetFullPathName_U_original = (decltype(RtlGetFullPathName_U_original))GetProcAddress(NtdllHmod, "RtlGetFullPathName_U");
-    if (!RtlGetFullPathName_U_original) return false;
+    if (!RtlGetFullPathName_U_original) {
+        NTFSDUPE_DBG(L"  failed to get addr of RtlGetFullPathName_U");
+        return false;
+    }
 
     NtDuplicateObject_original = (decltype(NtDuplicateObject_original))GetProcAddress(NtdllHmod, (std::string("Nt") + "DuplicateObject").c_str());
     if (!NtDuplicateObject_original)
         NtDuplicateObject_original = (decltype(NtDuplicateObject_original))GetProcAddress(NtdllHmod, (std::string("Zw") + "DuplicateObject").c_str());
-    if (!NtDuplicateObject_original) return false;
+    if (!NtDuplicateObject_original) {
+        NTFSDUPE_DBG(L"  failed to get addr of NtDuplicateObject");
+        return false;
+    }
     
     NtClose_original = (decltype(NtClose_original))GetProcAddress(NtdllHmod, (std::string("Nt") + "Close").c_str());
     if (!NtClose_original)
         NtClose_original = (decltype(NtClose_original))GetProcAddress(NtdllHmod, (std::string("Zw") + "Close").c_str());
-    if (!NtClose_original) return false;
+    if (!NtClose_original) {
+        NTFSDUPE_DBG(L"  failed to get addr of NtClose");
+        return false;
+    }
 
     return true;
 }

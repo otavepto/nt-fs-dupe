@@ -15,6 +15,7 @@
 #include "NtApis/NtApis.hpp"
 #include "Configs/Configs.hpp"
 #include "Helpers/Helpers.hpp"
+#include "Helpers/dbglog.hpp"
 
 #include "Hooks/NtOpenFile_hook/NtOpenFile_hook.hpp"
 #include "Hooks/NtCreateFile_hook/NtCreateFile_hook.hpp"

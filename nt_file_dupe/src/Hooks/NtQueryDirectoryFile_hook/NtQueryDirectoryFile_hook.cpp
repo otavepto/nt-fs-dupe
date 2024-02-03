@@ -130,12 +130,20 @@ NTSTATUS NTAPI ntfsdupe::hooks::NtQueryDirectoryFile_hook(
         if (cfg) switch (cfg->mode) {
         case ntfsdupe::cfgs::Type::target:
         case ntfsdupe::cfgs::Type::hide: {
+            NTFSDUPE_DBG(
+                L"ntfsdupe::hooks::NtQueryDirectoryFile_hook hide/target '%s'",
+                std::wstring(
+                    (wchar_t*)((char*)FileInformation + query_info.node_filename_offset),
+                    *(ULONG*)((char*)FileInformation + query_info.node_filename_bytes_offset) / sizeof(wchar_t)
+                ).c_str()
+            );
             IoStatusBlock->Information = 0;
             return STATUS_OBJECT_NAME_NOT_FOUND;
         }
         break;
 
         case ntfsdupe::cfgs::Type::original: { // then redirect to target
+            NTFSDUPE_DBG(L"ntfsdupe::hooks::NtQueryDirectoryFile_hook original '%s'", cfg->original.c_str());
             // duplicate the handle
             auto handle_dup = ntfsdupe::ntapis::DuplicateHandle(FileHandle);
             if (handle_dup == INVALID_HANDLE_VALUE) return result;

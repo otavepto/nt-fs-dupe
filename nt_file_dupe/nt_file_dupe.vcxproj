@@ -32,6 +32,7 @@
     <ClCompile Include="libs\Detours\uimports.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="src\Helpers\dbglog.cpp" />
     <ClCompile Include="src\Hooks\LdrLoadDll_hook\LdrLoadDll_hook.cpp" />
     <ClCompile Include="src\Hooks\NtCreateDirectoryObjectEx_hook\NtCreateDirectoryObjectEx_hook.cpp" />
     <ClCompile Include="src\Hooks\NtCreateDirectoryObject_hook\NtCreateDirectoryObject_hook.cpp" />
@@ -47,9 +48,12 @@
     <ClCompile Include="src\Hooks\NtQueryInformationFile_hook\NtQueryInformationFile_hook.cpp" />
     <ClCompile Include="src\Hooks\Hooks.cpp" />
     <ClCompile Include="src\Configs\Configs.cpp" />
+    <ClCompile Include="src\lib_main\lib_main.cpp" />
     <ClCompile Include="src\NtApis\NtApis.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Helpers\dbglog.hpp" />
+    <ClInclude Include="include\lib_main\lib_main.hpp" />
     <ClInclude Include="libs\Detours\detours.h" />
     <ClInclude Include="libs\Detours\detver.h" />
     <ClInclude Include="libs\Json\nlohmann\json.hpp" />
@@ -220,7 +224,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;NT_FS_DUPE_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <DebugInformationFormat>None</DebugInformationFormat>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -269,7 +273,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;NT_FS_DUPE_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <DebugInformationFormat>None</DebugInformationFormat>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>

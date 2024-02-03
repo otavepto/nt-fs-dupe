@@ -64,6 +64,9 @@
     <Filter Include="libs\Json\nlohmann">
       <UniqueIdentifier>{ea3adc20-7aca-4960-853b-4069bca884e0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="lib_main">
+      <UniqueIdentifier>{d001949c-3fb8-4277-9bec-dd5950f9069d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Hooks\Hooks.cpp">
@@ -147,6 +150,12 @@
     <ClCompile Include="src\Hooks\LdrLoadDll_hook\LdrLoadDll_hook.cpp">
       <Filter>Hooks\LdrLoadDll_hook</Filter>
     </ClCompile>
+    <ClCompile Include="src\Helpers\dbglog.cpp">
+      <Filter>Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lib_main\lib_main.cpp">
+      <Filter>lib_main</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="libs\Json\nlohmann\json.hpp">
@@ -211,6 +220,12 @@
     </ClInclude>
     <ClInclude Include="include\Hooks\LdrLoadDll_hook\LdrLoadDll_hook.hpp">
       <Filter>Hooks\LdrLoadDll_hook</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Helpers\dbglog.hpp">
+      <Filter>Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\lib_main\lib_main.hpp">
+      <Filter>lib_main</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

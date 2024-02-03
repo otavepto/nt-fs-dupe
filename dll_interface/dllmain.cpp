@@ -1,9 +1,9 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+#include "lib_main/lib_main.hpp"
+#include "Helpers/Helpers.hpp"
 #include "Configs/Configs.hpp"
-#include "NtApis/NtApis.hpp"
-#include "Hooks/Hooks.hpp"
 
 #include <filesystem>
 #include <string>
@@ -26,7 +26,7 @@ BOOL APIENTRY DllMain(
 {
     switch (ul_reason_for_call) {
     case DLL_PROCESS_ATTACH: {
-        if (!ntfsdupe::cfgs::init()) return FALSE;
+        if (!ntfsdupe::init()) return FALSE;
 
         std::wstring my_path_str(ntfsdupe::helpers::get_module_fullpath(hModule));
         if (my_path_str.empty()) return FALSE;
@@ -49,8 +49,6 @@ BOOL APIENTRY DllMain(
             }
         }
 
-        if (!ntfsdupe::ntapis::init()) return FALSE;
-        if (!ntfsdupe::hooks::init()) return FALSE;
     }
     break;
 
@@ -59,8 +57,7 @@ BOOL APIENTRY DllMain(
     break;
 
     case DLL_PROCESS_DETACH:
-        ntfsdupe::hooks::deinit();
-        ntfsdupe::cfgs::deinit();
+        ntfsdupe::deinit();
     break;
     }
 

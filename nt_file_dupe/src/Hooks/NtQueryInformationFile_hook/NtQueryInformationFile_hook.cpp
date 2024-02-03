@@ -70,6 +70,7 @@ NTSTATUS NTAPI ntfsdupe::hooks::NtQueryInformationFile_hook(
     // 2. call NtQueryInformationFile() and specify filename as info type
     // in that case we have to change the name back from myfile.rdr to myfile.dll
     if (cfg->mode == ntfsdupe::cfgs::Type::target) {
+        NTFSDUPE_DBG(L"ntfsdupe::hooks::NtQueryInformationFile_hook target '%s'", cfg->target.c_str());
         const auto path_bytes = nameLength - cfg->filename_bytes;
         // write original file name
         memcpy(

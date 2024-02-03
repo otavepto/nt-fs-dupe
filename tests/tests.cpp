@@ -2,14 +2,15 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <winternl.h>
 
-#include "Helpers/Helpers.hpp"
-#include "NtApis/NtApis.hpp"
-#include "Hooks/Hooks.hpp"
+#include "lib_main/lib_main.hpp"
 #include "Configs/Configs.hpp"
+#include "Hooks/Hooks.hpp"
 
 
 void CreateFileA_tests()
@@ -290,9 +291,7 @@ void NtQueryInformationFile_tests()
 
 int main(int argc, char** argv)
 {
-    if (!ntfsdupe::cfgs::init()) return 1;
-    if (!ntfsdupe::ntapis::init()) return 1;
-    if (!ntfsdupe::hooks::init()) return 1;
+    if (!ntfsdupe::init()) return 1;
 
     std::filesystem::current_path(ntfsdupe::cfgs::get_proc_dir() + L"../../../../");
     std::cout << "Current dir: '" << std::filesystem::current_path().u8string() << "'" << std::endl;
@@ -310,8 +309,7 @@ int main(int argc, char** argv)
     std_ifstream_tests();
 
     //LoadLibraryA("example/hideme.txt");
-    ntfsdupe::hooks::deinit();
-    ntfsdupe::cfgs::deinit();
+    ntfsdupe::deinit();
 
     return 0;
 }
