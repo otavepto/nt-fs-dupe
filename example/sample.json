@@ -1,0 +1,9 @@
+{
+  "../../../../example/myfile.txt": {
+    "mode": "redirect",
+    "to": "../../../../example/myfile.org"
+  },
+  "../../../../example/hideme.txt": {
+    "mode": "hide"
+  }
+}
