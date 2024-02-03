@@ -23,17 +23,24 @@ The solution is divided into 3 projects:
 }
 ```
 Each JSON key is considered the original file, its path could be absolute or relative.  
-Relative paths will be relative to the **location of the `.dll` itself**, not the current directory, or the process `.exe` file.  
 
 The value/object for that key defines the action for the original file:
 * `mode`: could be `redirect` or `hide`
 * `to`: only useful when `mode` = `redirect`, this defines which target file to redirect the original file to.  
-  Both the original and target files must have the same filename length, and must exist beside each other.  
-  Target files are hidden by default, for example, in the JSON file defined above, `myfile.org` will be hidden.
 
 Check the example [sample.json](./example/sample.json)
 
-## DLL behavior
+## Behavior
+Relative paths will be relative to the **location of the current `.exe`**, not the current directory.  
+
+Both the original and target files must:  
+- Have the same filename length
+- Exist in the same dir  
+
+Target files are hidden by default, for example, in the JSON file defined above, `myfile.org` will be hidden.
+
+JSON entries with a missing original file will be ignored without an error.  
+
 The dll will try to load the following files upon loading:
 * A JSON file with the same name as the `.dll`
 * `nt_file_dupe.json`
@@ -43,7 +50,7 @@ The dll will try to load the following files upon loading:
 * `nt_dupe.json`
 * `nt_dupe_config.json`  
 
-Any of these files, if needed to be loaded, must exist beside the `.dll`
+Any of these files, if needed to be loaded, must exist **beside** the `.dll`, not the current running `.exe`
 
 ## How to link and use as a static lib (.lib):
 1. Open the Visual Studio solution file `nt_file_dupe.sln` and build the project `nt_file_dupe`.  
