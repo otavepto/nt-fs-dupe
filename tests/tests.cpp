@@ -294,7 +294,7 @@ int main(int argc, char** argv)
     if (!ntfsdupe::ntapis::init()) return 1;
     if (!ntfsdupe::hooks::init()) return 1;
 
-    std::filesystem::current_path(ntfsdupe::cfgs::get_lib_dir() + L"../../../../");
+    std::filesystem::current_path(ntfsdupe::cfgs::get_proc_dir() + L"../../../../");
     std::cout << "Current dir: '" << std::filesystem::current_path().u8string() << "'" << std::endl;
     if (!ntfsdupe::cfgs::load_file(L"example/sample.json")) return 1;
 

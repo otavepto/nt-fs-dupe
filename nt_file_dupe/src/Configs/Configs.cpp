@@ -13,7 +13,7 @@ namespace ntfsdupe::cfgs {
     using json = nlohmann::json;
 
     static CRITICAL_SECTION bypass_files_cs{};
-    static std::wstring lib_dir{};
+    static std::wstring exe_dir{};
     static std::unordered_map<std::wstring, ntfsdupe::cfgs::CfgEntry> config_file{};
     static std::unordered_map<DWORD, std::unordered_set<std::wstring>> bypass_files{};
 
@@ -36,20 +36,20 @@ bool ntfsdupe::cfgs::init()
 
     InitializeCriticalSection(&bypass_files_cs);
 
-    lib_dir.clear();
+    exe_dir.clear();
     config_file.clear();
     bypass_files.clear();
 
-    HMODULE hModule = nullptr;
-    if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCWSTR)&ntfsdupe::cfgs::init, &hModule)) return false;
+    HMODULE hModule = GetModuleHandleW(nullptr);
+    if (!hModule) return false;
 
-    lib_dir = ntfsdupe::helpers::get_module_fullpath(hModule);
-    if (lib_dir.empty()) return false;
+    exe_dir = ntfsdupe::helpers::get_module_fullpath(hModule);
+    if (exe_dir.empty()) return false;
 
     // hide ourself
     //add_entry(Mode::hide, lib_dir);
 
-    lib_dir = lib_dir.substr(0, lib_dir.find_last_of(L'\\') + 1);
+    exe_dir = exe_dir.substr(0, exe_dir.find_last_of(L'\\') + 1);
     return true;
 }
 
@@ -58,16 +58,16 @@ void ntfsdupe::cfgs::deinit(void)
     if (cpp_rt.destroyed) return;
 
     cpp_rt.destroyed = true;
-    lib_dir.clear();
+    exe_dir.clear();
     config_file.clear();
     bypass_files.clear();
 
     DeleteCriticalSection(&bypass_files_cs);
 }
 
-const std::wstring& ntfsdupe::cfgs::get_lib_dir() noexcept
+const std::wstring& ntfsdupe::cfgs::get_proc_dir() noexcept
 {
-    return lib_dir;
+    return exe_dir;
 }
 
 bool ntfsdupe::cfgs::add_entry(Mode mode, const std::wstring& original, const std::wstring& target)
@@ -78,12 +78,12 @@ bool ntfsdupe::cfgs::add_entry(Mode mode, const std::wstring& original, const st
     if (mode == Mode::redirect && target.empty()) return false;
 
     try {
-        std::wstring _original = ntfsdupe::helpers::to_absolute(original, lib_dir);
+        std::wstring _original = ntfsdupe::helpers::to_absolute(original, exe_dir);
         if (!ntfsdupe::helpers::file_exist(_original)) return true; // not a problem
         size_t filename_idx = _original.find_last_of(L'\\') + 1;
         unsigned short filename_bytes = (unsigned short)((_original.size() - filename_idx) * sizeof(_original[0]));
 
-        std::wstring _target = target.empty() ? target : ntfsdupe::helpers::to_absolute(target, lib_dir);
+        std::wstring _target = target.empty() ? target : ntfsdupe::helpers::to_absolute(target, exe_dir);
 
         switch (mode) {
         case ntfsdupe::cfgs::Mode::hide: {

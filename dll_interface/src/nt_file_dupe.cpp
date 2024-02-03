@@ -8,12 +8,6 @@
 #include <filesystem>
 
 
-NTFSDUPE_API const wchar_t* NTFSDUPE_DECL ntfsdupe_get_lib_dir()
-{
-	// returns a static string
-	return ntfsdupe::cfgs::get_lib_dir().c_str();
-}
-
 NTFSDUPE_API bool NTFSDUPE_DECL ntfsdupe_add_entry(
 	ntfsdupe::itf::Mode mode,
 	const wchar_t* original,

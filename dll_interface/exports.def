@@ -1,6 +1,5 @@
 LIBRARY nt_file_dupe
 EXPORTS
-	ntfsdupe_get_lib_dir
 	ntfsdupe_add_entry
 	ntfsdupe_load_file
 	ntfsdupe_add_bypass

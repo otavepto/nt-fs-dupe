@@ -14,15 +14,16 @@
 #endif
 
 
-NTFSDUPE_API const wchar_t* NTFSDUPE_DECL ntfsdupe_get_lib_dir();
-
-namespace ntfsdupe::itf {
+// ntfsdupe::itf works for language >= C++17
+namespace ntfsdupe {
+namespace itf {
 	// mirror of ntfsdupe::cfgs::Mode
 	// to avoid including .hpp files from the static lib
 	enum class Mode : char {
 		redirect,
 		hide,
 	};
+}
 }
 
 NTFSDUPE_API bool NTFSDUPE_DECL ntfsdupe_add_entry(

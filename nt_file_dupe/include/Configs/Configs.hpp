@@ -34,7 +34,7 @@ namespace ntfsdupe::cfgs {
 
     void deinit(void);
 
-    const std::wstring& get_lib_dir() noexcept;
+    const std::wstring& get_proc_dir() noexcept;
 
     bool add_entry(Mode mode, const std::wstring &original, const std::wstring &target = std::wstring());
 
