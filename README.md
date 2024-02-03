@@ -27,7 +27,9 @@ Relative paths will be relative to the **location of the `.dll` itself**, not th
 
 The value/object for that key defines the action for the original file:
 * `mode`: could be `redirect` or `hide`
-* `to`: only useful when `mode` = `redirect`, this defines which file to redirect the original file to
+* `to`: only useful when `mode` = `redirect`, this defines which target file to redirect the original file to.  
+  Both the original and target files must have the same filename length, and must exist beside each other.  
+  Target files are hidden by default, for example, in the JSON file defined above, `myfile.org` will be hidden.
 
 Check the example [sample.json](./example/sample.json)
 
