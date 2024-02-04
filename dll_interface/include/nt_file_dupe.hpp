@@ -29,7 +29,8 @@ namespace itf {
 NTFSDUPE_API bool NTFSDUPE_DECL ntfsdupe_add_entry(
 	ntfsdupe::itf::Mode mode,
 	const wchar_t *original,
-	const wchar_t *target
+	const wchar_t *target,
+	bool must_exist
 );
 
 NTFSDUPE_API bool NTFSDUPE_DECL ntfsdupe_load_file(const wchar_t *file);

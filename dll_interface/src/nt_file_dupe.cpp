@@ -8,10 +8,11 @@
 #include <filesystem>
 
 
-NTFSDUPE_API bool NTFSDUPE_DECL ntfsdupe_add_entry(
+bool ntfsdupe_add_entry(
 	ntfsdupe::itf::Mode mode,
 	const wchar_t* original,
-	const wchar_t* target
+	const wchar_t* target,
+	bool must_exist
 )
 {
 	if (!original || !original[0]) return false;
@@ -19,15 +20,15 @@ NTFSDUPE_API bool NTFSDUPE_DECL ntfsdupe_add_entry(
 	std::wstring _target{};
 	if (target && target[0]) _target = std::wstring(target);
 
-	return ntfsdupe::cfgs::add_entry((ntfsdupe::cfgs::Mode)mode, original, _target);
+	return ntfsdupe::cfgs::add_entry((ntfsdupe::cfgs::Mode)mode, original, _target, must_exist);
 }
 
-NTFSDUPE_API bool NTFSDUPE_DECL ntfsdupe_load_file(const wchar_t *file)
+bool ntfsdupe_load_file(const wchar_t *file)
 {
 	return ntfsdupe::cfgs::load_file(file);
 }
 
-NTFSDUPE_API void NTFSDUPE_DECL ntfsdupe_add_bypass(const wchar_t *file)
+void ntfsdupe_add_bypass(const wchar_t *file)
 {
 	size_t len = wcsnlen_s(file, 4096);
 	if (len == 4096) return; // invalid string without null terminator
@@ -38,7 +39,7 @@ NTFSDUPE_API void NTFSDUPE_DECL ntfsdupe_add_bypass(const wchar_t *file)
 	ntfsdupe::cfgs::add_bypass(_file);
 }
 
-NTFSDUPE_API void NTFSDUPE_DECL ntfsdupe_remove_bypass(const wchar_t* file)
+void ntfsdupe_remove_bypass(const wchar_t* file)
 {
 	size_t len = wcsnlen_s(file, 4096);
 	if (len == 4096) return; // invalid string without null terminator
@@ -49,7 +50,7 @@ NTFSDUPE_API void NTFSDUPE_DECL ntfsdupe_remove_bypass(const wchar_t* file)
 	ntfsdupe::cfgs::remove_bypass(file);
 }
 
-NTFSDUPE_API void NTFSDUPE_DECL ntfsdupe_deinit()
+void ntfsdupe_deinit()
 {
 	ntfsdupe::hooks::deinit();
 	ntfsdupe::cfgs::deinit();

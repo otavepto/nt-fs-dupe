@@ -15,7 +15,8 @@ The solution is divided into 3 projects:
 {
   "myfile.txt": {
     "mode": "redirect",
-    "to": "myfile.org"
+    "to": "myfile.org",
+    "must_exist": true
   },
   "hideme.txt": {
     "mode": "hide"
@@ -26,7 +27,8 @@ Each JSON key is considered the original file, its path could be absolute or rel
 
 The value/object for that key defines the action for the original file:
 * `mode`: could be `redirect` or `hide`
-* `to`: only useful when `mode` = `redirect`, this defines which target file to redirect the original file to.  
+* `to`: only useful when `mode` = `redirect`, this defines which target file to redirect the original file to
+* `must_exist` (default = `false`): when set to `true`, the JSON entry will be skipped if the original file doesn't exist, or the target file doesn't exist in `redirect` mode
 
 Check the example [sample.json](./example/sample.json)
 
