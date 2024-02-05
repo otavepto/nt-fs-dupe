@@ -18,7 +18,18 @@ The solution is divided into 3 projects:
     "to": "myfile.org",
     "must_exist": true
   },
+  "path/myfile_22.txt": {
+    "mode": "redirect",
+    "to": "path/myfile_22.org",
+  },
+  "../../folder/some_file.txt": {
+    "mode": "redirect",
+    "to": "../../folder/some_file.org",
+  },
   "hideme.txt": {
+    "mode": "hide"
+  },
+  "../hideme_22.txt": {
     "mode": "hide"
   }
 }
