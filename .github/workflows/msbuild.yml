@@ -50,7 +50,7 @@ jobs:
 
 
 ### upload artifact/package to github Actions (release mode)
-    - name: Upload build pacakge (release)
+    - name: Upload build package (release)
       uses: actions/upload-artifact@v4
       with:
         name: "build-release-${{ github.sha }}"
@@ -60,7 +60,7 @@ jobs:
         retention-days: 1
 
 ### upload artifact/package to github Actions (debug mode)
-    - name: Upload build pacakge (debug)
+    - name: Upload build package (debug)
       uses: actions/upload-artifact@v4
       with:
         name: "build-debug-${{ github.sha }}"
@@ -70,29 +70,31 @@ jobs:
         retention-days: 1
 
 
-### package (release mode)
-    - uses: vimtor/action-zip@v1.1
+### package (release mode) if this is a tag push
+    - name: Package release archive (release)
+      uses: vimtor/action-zip@v1.1
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: bin/Release/
         dest: bin/package/build-release.zip
 
-### package (debug mode)
-    - uses: vimtor/action-zip@v1.1
+### package (debug mode) if this is a tag push
+    - name: Package release archive (debug)
+      uses: vimtor/action-zip@v1.1
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: bin/Debug/
         dest: bin/package/build-debug.zip
 
 ### release (release mode) if this is a tag push
-    - name: Release (release)
+    - name: Release artifact (release)
       if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
       with:
         files: "bin/package/build-release.zip"
 
 ### release (debug mode) if this is a tag push
-    - name: Release (debug)
+    - name: Release artifact (debug)
       if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
       with:
