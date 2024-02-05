@@ -76,7 +76,7 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: bin/Release/
-        dest: bin/package/build-release.zip
+        dest: bin/package/ntfsdupe-release.zip
 
 ### package (debug mode) if this is a tag push
     - name: Package release archive (debug)
@@ -84,18 +84,18 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: bin/Debug/
-        dest: bin/package/build-debug.zip
+        dest: bin/package/ntfsdupe-debug.zip
 
 ### release (release mode) if this is a tag push
     - name: Release artifact (release)
       if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
       with:
-        files: "bin/package/build-release.zip"
+        files: "bin/package/ntfsdupe-release.zip"
 
 ### release (debug mode) if this is a tag push
     - name: Release artifact (debug)
       if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
       with:
-        files: "bin/package/build-debug.zip"
+        files: "bin/package/ntfsdupe-debug.zip"
