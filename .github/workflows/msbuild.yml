@@ -1,44 +1,99 @@
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
 name: MSBuild
 
 on:
   push:
-    branches: [ "main" ]
+    tags:
+      - release*
+    
   pull_request:
     branches: [ "main" ]
-
-env:
-  # Path to the solution file relative to the root of the project.
-  SOLUTION_FILE_PATH: .
-
-  # Configuration type to build.
-  # You can convert this to a build matrix if you need coverage of multiple configuration types.
-  # https://docs.github.com/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-  BUILD_CONFIGURATION: Release
+  workflow_dispatch:
+    # allows manual trigger
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2022
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout branch
+      uses: actions/checkout@v4
 
     - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v1.0.2
+      uses: microsoft/setup-msbuild@v2
 
-    - name: Restore NuGet packages
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: nuget restore ${{env.SOLUTION_FILE_PATH}}
+### build (release mode x64)
+    - name: Build release mode (x64)
+      shell: cmd
+      working-directory: ${{ github.workspace }}
+      run: msbuild /nologo /target:Clean;dll_interface:Rebuild /m /p:Configuration=Release,Platform=x64 nt_file_dupe.sln
 
-    - name: Build
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      # Add additional options to the MSBuild command line here (like platform or verbosity level).
-      # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
-      run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}}
+### build (release mode x32)
+    - name: Build release mode (x32)
+      shell: cmd
+      working-directory: ${{ github.workspace }}
+      run: msbuild /nologo /target:Clean;dll_interface:Rebuild /m /p:Configuration=Release,Platform=x86 nt_file_dupe.sln
+
+### build (debug mode x64)
+    - name: Build debug mode (x64)
+      shell: cmd
+      working-directory: ${{ github.workspace }}
+      run: msbuild /nologo /target:Clean;dll_interface:Rebuild /m /p:Configuration=Debug,Platform=x64 nt_file_dupe.sln
+
+### build (debug mode x32)
+    - name: Build debug mode (x32)
+      shell: cmd
+      working-directory: ${{ github.workspace }}
+      run: msbuild /nologo /target:Clean;dll_interface:Rebuild /m /p:Configuration=Debug,Platform=x86 nt_file_dupe.sln
+
+
+### upload artifact/package to github Actions (release mode)
+    - name: Upload build pacakge (release)
+      uses: actions/upload-artifact@v4
+      with:
+        name: "build-release-${{ github.sha }}"
+        path: bin/Release/
+        if-no-files-found: 'error'
+        compression-level: 9
+        retention-days: 1
+
+### upload artifact/package to github Actions (debug mode)
+    - name: Upload build pacakge (debug)
+      uses: actions/upload-artifact@v4
+      with:
+        name: "build-debug-${{ github.sha }}"
+        path: bin/Debug/
+        if-no-files-found: 'error'
+        compression-level: 9
+        retention-days: 1
+
+
+### package (release mode)
+    - uses: vimtor/action-zip@v1.1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: bin/Release/
+        dest: bin/package/build-release.zip
+
+### package (debug mode)
+    - uses: vimtor/action-zip@v1.1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: bin/Debug/
+        dest: bin/package/build-debug.zip
+
+### release (release mode) if this is a tag push
+    - name: Release (release)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: "bin/package/build-release.zip"
+
+### release (debug mode) if this is a tag push
+    - name: Release (debug)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: "bin/package/build-debug.zip"
