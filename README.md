@@ -52,9 +52,9 @@ Both the original and target files must:
 
 Target files are hidden by default, for example, in the JSON file defined above, `myfile.org` will be hidden.
 
-JSON entries with a missing original file will be ignored without an error.  
+If `must_exist` = `true`, then JSON entries with a missing original file will be ignored without an error.  
 
-The dll will try to load the following files upon loading:
+The dll will try to load one of the following files upon loading with that order:
 * A JSON file with the same name as the `.dll`
 * `nt_file_dupe.json`
 * `nt_file_dupe_config.json`
