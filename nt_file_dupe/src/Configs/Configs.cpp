@@ -226,7 +226,7 @@ const ntfsdupe::cfgs::CfgEntry* ntfsdupe::cfgs::find_entry(const std::wstring_vi
 void ntfsdupe::cfgs::add_bypass(const std::wstring_view &str) noexcept
 {
     EnterCriticalSection(&bypass_files_cs);
-    NTFSDUPE_DBG(L"  ntfsdupe::cfgs::add_bypass '%s'", str.data());
+    //NTFSDUPE_DBG(L"  ntfsdupe::cfgs::add_bypass '%s'", str.data());
     bypass_files[GetCurrentThreadId()].insert(std::wstring(str));
     LeaveCriticalSection(&bypass_files_cs);
 }
@@ -234,7 +234,7 @@ void ntfsdupe::cfgs::add_bypass(const std::wstring_view &str) noexcept
 void ntfsdupe::cfgs::remove_bypass(const std::wstring_view &str) noexcept
 {
     EnterCriticalSection(&bypass_files_cs);
-    NTFSDUPE_DBG(L"  ntfsdupe::cfgs::remove_bypass '%s'", str.data());
+    //NTFSDUPE_DBG(L"  ntfsdupe::cfgs::remove_bypass '%s'", str.data());
     if (bypass_files.size()) {
         DWORD tid = GetCurrentThreadId();
         auto &itr = bypass_files.find(tid);
