@@ -15,8 +15,12 @@ namespace ntfsdupe::cfgs {
 
     static CRITICAL_SECTION bypass_files_cs{};
     static std::wstring exe_dir{};
-    static std::unordered_map<std::wstring, ntfsdupe::cfgs::CfgEntry> config_file{};
-    static std::unordered_map<DWORD, std::unordered_set<std::wstring>> bypass_files{};
+    // this storage holds all strings used (actual memory allocation), which are later referenced by the other containers
+    // it is way cheaper to use string_view for other containers since it doesn't copy strings, and Ntxxx APIs use
+    // strings with length, so just wrapping them is enough
+    static std::unordered_set<std::wstring> global_entries_storage{};
+    static std::unordered_map<std::wstring_view, ntfsdupe::cfgs::CfgEntry> config_entries{};
+    static std::unordered_map<DWORD, std::unordered_set<std::wstring_view>> bypass_entries{};
 }
 
 
@@ -27,8 +31,8 @@ bool ntfsdupe::cfgs::init()
     InitializeCriticalSection(&bypass_files_cs);
 
     exe_dir.clear();
-    config_file.clear();
-    bypass_files.clear();
+    config_entries.clear();
+    bypass_entries.clear();
     
     HMODULE hModule = GetModuleHandleW(nullptr);
     if (!hModule) {
@@ -62,7 +66,7 @@ const std::wstring& ntfsdupe::cfgs::get_proc_dir() noexcept
     return exe_dir;
 }
 
-bool ntfsdupe::cfgs::add_entry(Mode mode, const std::wstring& original, const std::wstring& target, bool must_exist)
+bool ntfsdupe::cfgs::add_entry(Mode mode, const std::wstring &original, const std::wstring &target, bool must_exist)
 {
     NTFSDUPE_DBG(L"ntfsdupe::cfgs::add_entry() %i '%s' '%s'", (int)mode, original.c_str(), target.c_str());
 
@@ -93,7 +97,8 @@ bool ntfsdupe::cfgs::add_entry(Mode mode, const std::wstring& original, const st
 
         switch (mode) {
         case ntfsdupe::cfgs::Mode::hide: {
-            CfgEntry &entry = config_file[ntfsdupe::helpers::upper(_original)];
+            const auto &_original_upper_ref = *global_entries_storage.insert(ntfsdupe::helpers::upper(_original)).first;
+            CfgEntry &entry = config_entries[_original_upper_ref];
             entry.mode = Type::hide;
             entry.original = _original;
             entry.original_filename = &entry.original[0] + filename_idx;
@@ -127,7 +132,8 @@ bool ntfsdupe::cfgs::add_entry(Mode mode, const std::wstring& original, const st
             }
 
             {
-                CfgEntry &entry = config_file[_original_upper];
+                const auto& _original_upper_ref = *global_entries_storage.insert(_original_upper).first;
+                CfgEntry &entry = config_entries[_original_upper_ref];
                 entry.mode = Type::original;
                 entry.original = _original;
                 entry.original_filename = &entry.original[0] + filename_idx;
@@ -137,7 +143,8 @@ bool ntfsdupe::cfgs::add_entry(Mode mode, const std::wstring& original, const st
             }
 
             {
-                CfgEntry &entry = config_file[_target_upper];
+                const auto& _target_upper_ref = *global_entries_storage.insert(_target_upper).first;
+                CfgEntry &entry = config_entries[_target_upper_ref];
                 entry.mode = Type::target;
                 entry.original = _original;
                 entry.original_filename = &entry.original[0] + filename_idx;
@@ -158,7 +165,7 @@ bool ntfsdupe::cfgs::add_entry(Mode mode, const std::wstring& original, const st
     }
 }
 
-bool ntfsdupe::cfgs::load_file(const wchar_t* file)
+bool ntfsdupe::cfgs::load_file(const wchar_t *file)
 {
     NTFSDUPE_DBG(L"ntfsdupe::cfgs::load_file() '%s'", file);
     if (!file || !file[0]) {
@@ -215,10 +222,10 @@ bool ntfsdupe::cfgs::load_file(const wchar_t* file)
 
 const ntfsdupe::cfgs::CfgEntry* ntfsdupe::cfgs::find_entry(const std::wstring_view &str) noexcept
 {
-    if (!ntfsdupe::cfgs::config_file.size() || is_bypassed(str)) return nullptr;
+    if (ntfsdupe::cfgs::config_entries.empty() || is_bypassed(str)) return nullptr;
 
-    const auto &res = ntfsdupe::cfgs::config_file.find(std::wstring(str));
-    return res == ntfsdupe::cfgs::config_file.end()
+    const auto &res = ntfsdupe::cfgs::config_entries.find(str);
+    return res == ntfsdupe::cfgs::config_entries.end()
         ? nullptr
         : &res->second;
 }
@@ -226,22 +233,22 @@ const ntfsdupe::cfgs::CfgEntry* ntfsdupe::cfgs::find_entry(const std::wstring_vi
 void ntfsdupe::cfgs::add_bypass(const std::wstring_view &str) noexcept
 {
     EnterCriticalSection(&bypass_files_cs);
-    //NTFSDUPE_DBG(L"  ntfsdupe::cfgs::add_bypass '%s'", str.data());
-    bypass_files[GetCurrentThreadId()].insert(std::wstring(str));
+    //NTFSDUPE_DBG(L"ntfsdupe::cfgs::add_bypass '%.*s'", (int)str.size(), str.data());
+    bypass_entries[GetCurrentThreadId()].insert(str);
     LeaveCriticalSection(&bypass_files_cs);
 }
 
 void ntfsdupe::cfgs::remove_bypass(const std::wstring_view &str) noexcept
 {
     EnterCriticalSection(&bypass_files_cs);
-    //NTFSDUPE_DBG(L"  ntfsdupe::cfgs::remove_bypass '%s'", str.data());
-    if (bypass_files.size()) {
+    //NTFSDUPE_DBG(L"ntfsdupe::cfgs::remove_bypass '%.*s'", (int)str.size(), str.data());
+    if (bypass_entries.size()) {
         DWORD tid = GetCurrentThreadId();
-        auto &itr = bypass_files.find(tid);
-        if (bypass_files.end() != itr) {
-            if (itr->second.erase(std::wstring(str))) {
+        auto &itr = bypass_entries.find(tid);
+        if (bypass_entries.end() != itr) {
+            if (itr->second.erase(str)) {
                 if (itr->second.empty()) {
-                    bypass_files.erase(tid);
+                    bypass_entries.erase(tid);
                 }
             }
         }
@@ -254,8 +261,13 @@ bool ntfsdupe::cfgs::is_bypassed(const std::wstring_view &str) noexcept
     bool ret = false;
 
     EnterCriticalSection(&bypass_files_cs);
-    ret = bypass_files.size() &&
-        bypass_files.find(GetCurrentThreadId()) != bypass_files.end();
+    //NTFSDUPE_DBG(L"ntfsdupe::cfgs::is_bypassed '%.*s'", (int)str.size(), str.data());
+    if (bypass_entries.size()) {
+        auto tid_it = bypass_entries.find(GetCurrentThreadId());
+        if (tid_it != bypass_entries.end()) {
+            ret = tid_it->second.find(str) != tid_it->second.end();
+        }
+    }
     LeaveCriticalSection(&bypass_files_cs);
     
     return ret;

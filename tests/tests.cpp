@@ -162,8 +162,7 @@ void FindFirstFileExW_tests()
     BOOL x = FALSE;
     do {
         std::wcout
-            << L"file "
-            << L"[" << fdata.nFileSizeHigh << L", " << fdata.nFileSizeLow << L"]"
+            << L"file [" << fdata.nFileSizeHigh << L", " << fdata.nFileSizeLow << L"]"
             << L" = " << fdata.cFileName << L" = " << fdata.cAlternateFileName
             << std::endl;
         x = FindNextFileW(all, &fdata);

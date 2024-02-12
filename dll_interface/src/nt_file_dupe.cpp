@@ -1,5 +1,6 @@
 #include "nt_file_dupe.hpp"
 
+#include "lib_main/lib_main.hpp"
 #include "Configs/Configs.hpp"
 #include "Helpers/Helpers.hpp"
 #include "Hooks/Hooks.hpp"
@@ -10,16 +11,16 @@
 
 bool NTFSDUPE_DECL ntfsdupe_add_entry(
 	ntfsdupe::itf::Mode mode,
-	const wchar_t* original,
-	const wchar_t* target,
+	const wchar_t *original,
+	const wchar_t *target,
 	bool must_exist
 )
 {
 	if (!original || !original[0]) return false;
 	
-	std::wstring _target{};
-	if (target && target[0]) _target = std::wstring(target);
-
+	std::wstring _target = target && target[0]
+		? std::wstring(target)
+		: std::wstring();
 	return ntfsdupe::cfgs::add_entry((ntfsdupe::cfgs::Mode)mode, original, _target, must_exist);
 }
 
@@ -28,30 +29,7 @@ bool NTFSDUPE_DECL ntfsdupe_load_file(const wchar_t *file)
 	return ntfsdupe::cfgs::load_file(file);
 }
 
-void NTFSDUPE_DECL ntfsdupe_add_bypass(const wchar_t *file)
-{
-	size_t len = wcsnlen_s(file, 4096);
-	if (len == 4096) return; // invalid string without null terminator
-
-	std::wstring _file(std::filesystem::absolute(std::wstring(file, len)).wstring());
-	ntfsdupe::helpers::upper(&_file[0], (int)_file.size());
-
-	ntfsdupe::cfgs::add_bypass(_file);
-}
-
-void NTFSDUPE_DECL ntfsdupe_remove_bypass(const wchar_t* file)
-{
-	size_t len = wcsnlen_s(file, 4096);
-	if (len == 4096) return; // invalid string without null terminator
-
-	std::wstring _file(std::filesystem::absolute(std::wstring(file, len)).wstring());
-	ntfsdupe::helpers::upper(&_file[0], (int)_file.size());
-
-	ntfsdupe::cfgs::remove_bypass(file);
-}
-
 void NTFSDUPE_DECL ntfsdupe_deinit()
 {
-	ntfsdupe::hooks::deinit();
-	ntfsdupe::cfgs::deinit();
+	ntfsdupe::deinit();
 }

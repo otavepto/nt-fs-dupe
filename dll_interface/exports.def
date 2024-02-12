@@ -2,7 +2,4 @@ LIBRARY nt_file_dupe
 EXPORTS
 	ntfsdupe_add_entry
 	ntfsdupe_load_file
-	ntfsdupe_add_bypass
-	ntfsdupe_remove_bypass
 	ntfsdupe_deinit
-

@@ -35,8 +35,4 @@ NTFSDUPE_API bool NTFSDUPE_DECL ntfsdupe_add_entry(
 
 NTFSDUPE_API bool NTFSDUPE_DECL ntfsdupe_load_file(const wchar_t *file);
 
-NTFSDUPE_API void NTFSDUPE_DECL ntfsdupe_add_bypass(const wchar_t *file);
-
-NTFSDUPE_API void NTFSDUPE_DECL ntfsdupe_remove_bypass(const wchar_t *file);
-
 NTFSDUPE_API void NTFSDUPE_DECL ntfsdupe_deinit();

@@ -20,9 +20,11 @@ namespace ntfsdupe::cfgs {
     struct CfgEntry {
         Type mode;
 
+        // just a strong ref holder
         std::wstring original;
         const wchar_t *original_filename;
 
+        // just a strong ref holder
         std::wstring target;
         const wchar_t *target_filename;
 
@@ -38,15 +40,15 @@ namespace ntfsdupe::cfgs {
 
     bool add_entry(Mode mode, const std::wstring &original, const std::wstring &target = std::wstring(), bool must_exist = true);
 
-    bool load_file(const wchar_t* file);
+    bool load_file(const wchar_t *file);
 
     const CfgEntry* find_entry(const std::wstring_view &str) noexcept;
 
-    void add_bypass(const std::wstring_view& str) noexcept;
+    void add_bypass(const std::wstring_view &str) noexcept;
     
-    void remove_bypass(const std::wstring_view& str) noexcept;
+    void remove_bypass(const std::wstring_view &str) noexcept;
 
-    bool is_bypassed(const std::wstring_view& str) noexcept;
+    bool is_bypassed(const std::wstring_view &str) noexcept;
 
 }
 
