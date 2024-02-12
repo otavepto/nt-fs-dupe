@@ -65,6 +65,12 @@ The dll will try to load one of the following files upon loading with that order
 
 Any of these files, if needed to be loaded, must exist **beside** the `.dll`, not the current running `.exe`
 
+## How use the pre-built .dll:
+1. Create a `.json` file with some entries as shown above
+2. Rename the `.json` file to the same name of the `.dll`, for example if the `.dll` is called `nt_file_dupe.dll`, then the `.json` file must be named `nt_file_dupe.json`
+3. Place both the `.dll` and the `.json` files beside each other in the same folder
+4. Load the `.dll` inside your target, either modify the imports table with something like `CFF Explorer`, or use any dll loader/injector 
+
 ## How to link and use as a static lib (.lib):
 1. Open the Visual Studio solution file `nt_file_dupe.sln` and build the project `nt_file_dupe`.  
    Make sure to select the right architecture (`x64` or `x86`) and build type (`release` or `debug`)
