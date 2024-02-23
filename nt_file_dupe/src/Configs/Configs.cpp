@@ -83,7 +83,7 @@ bool ntfsdupe::cfgs::add_entry(Mode mode, const std::wstring &original, const st
     try {
         std::wstring _original = ntfsdupe::helpers::to_absolute(original, exe_dir);
         NTFSDUPE_DBG(L"  absolute original file: '%s'", _original.c_str());
-        if (must_exist && !ntfsdupe::helpers::file_exist(_original)) {  // not a problem
+        if (must_exist && !std::filesystem::exists(_original)) {  // not a problem
             NTFSDUPE_DBG(L"  original file not found");
             return true;
         }
@@ -126,7 +126,7 @@ bool ntfsdupe::cfgs::add_entry(Mode mode, const std::wstring &original, const st
                 NTFSDUPE_DBG(L"  self redirection");
                 return false;
             }
-            if (must_exist && !ntfsdupe::helpers::file_exist(_target)) { // not a problem
+            if (must_exist && !std::filesystem::exists(_target)) { // not a problem
                 NTFSDUPE_DBG(L"  mode is redirect but target file not found");
                 return true;
             }
@@ -184,6 +184,7 @@ bool ntfsdupe::cfgs::load_file(const wchar_t *file)
         auto j = json::parse(f);
         f.close();
 
+        size_t added_entries = 0;
         for (const auto &item: j.items()) {
             try {
                 NTFSDUPE_DBG(L"  parsing new entry");
@@ -193,9 +194,16 @@ bool ntfsdupe::cfgs::load_file(const wchar_t *file)
                 Mode mode;
                 std::string mode_str = item.value().value("mode", std::string());
                 NTFSDUPE_DBG("  mode = " + mode_str);
-                if (mode_str.compare("redirect") == 0) mode = Mode::redirect;
-                else if (mode_str.compare("hide") == 0) mode = Mode::hide;
-                else return false;
+                if (mode_str.compare("redirect") == 0) {
+                    mode = Mode::redirect;
+                }
+                else if (mode_str.compare("hide") == 0) {
+                    mode = Mode::hide;
+                }
+                else {
+                    NTFSDUPE_DBG(L"  invalid mode, skipping entry");
+                    continue;
+                }
 
                 std::wstring target(
                     ntfsdupe::helpers::str_to_wstr(
@@ -207,13 +215,13 @@ bool ntfsdupe::cfgs::load_file(const wchar_t *file)
                 bool must_exist = item.value().value("must_exist", false);
                 NTFSDUPE_DBG(L"  must_exist '%i'", (int)must_exist);
 
-                if (!add_entry(mode, original, target, must_exist)) return false;
+                if (add_entry(mode, original, target, must_exist)) ++added_entries;
             } catch (const std::exception &e) {
                 NTFSDUPE_DBG(e.what());
             }
         }
 
-        return true;
+        return added_entries > 0;
     } catch (const std::exception &e) {
         NTFSDUPE_DBG(e.what());
         return false;
@@ -222,12 +230,16 @@ bool ntfsdupe::cfgs::load_file(const wchar_t *file)
 
 const ntfsdupe::cfgs::CfgEntry* ntfsdupe::cfgs::find_entry(const std::wstring_view &str) noexcept
 {
-    if (ntfsdupe::cfgs::config_entries.empty() || is_bypassed(str)) return nullptr;
+    if (ntfsdupe::cfgs::config_entries.empty()) return nullptr;
 
     const auto &res = ntfsdupe::cfgs::config_entries.find(str);
-    return res == ntfsdupe::cfgs::config_entries.end()
-        ? nullptr
-        : &res->second;
+    if (res == ntfsdupe::cfgs::config_entries.end()) {
+        return nullptr;
+    } else {
+        return is_bypassed(str)
+            ? nullptr
+            : &res->second;
+    }
 }
 
 void ntfsdupe::cfgs::add_bypass(const std::wstring_view &str) noexcept

@@ -69,7 +69,11 @@ Any of these files, if needed to be loaded, must exist **beside** the `.dll`, no
 1. Create a `.json` file with some entries as shown above
 2. Rename the `.json` file to the same name of the `.dll`, for example if the `.dll` is called `nt_file_dupe.dll`, then the `.json` file must be named `nt_file_dupe.json`
 3. Place both the `.dll` and the `.json` files beside each other in the same folder
-4. Load the `.dll` inside your target, either modify the imports table with something like `CFF Explorer`, or use any dll loader/injector 
+4. Load the `.dll` inside your target, either modify the imports table with something like `CFF Explorer`, or use any dll loader/injector  
+
+
+Note that `ntfsdupe::cfgs::add_entry()` or `ntfsdupe_add_entry()` are not thread safe.  
+
 
 ## How to link and use as a static lib (.lib):
 1. Open the Visual Studio solution file `nt_file_dupe.sln` and build the project `nt_file_dupe`.  

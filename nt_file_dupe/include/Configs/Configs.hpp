@@ -38,7 +38,7 @@ namespace ntfsdupe::cfgs {
 
     const std::wstring& get_proc_dir() noexcept;
 
-    bool add_entry(Mode mode, const std::wstring &original, const std::wstring &target = std::wstring(), bool must_exist = true);
+    bool add_entry(Mode mode, const std::wstring &original, const std::wstring &target = std::wstring(), bool must_exist = false);
 
     bool load_file(const wchar_t *file);
 
