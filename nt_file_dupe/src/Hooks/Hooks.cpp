@@ -5,7 +5,7 @@
 #include "Detours/detours.h"
 
 
-void ntfsdupe::hooks::copy_new_target(wchar_t *object_name_new, const PUNICODE_STRING ObjectName, const ntfsdupe::cfgs::CfgEntry* cfg)
+void ntfsdupe::hooks::copy_new_file_target(wchar_t *object_name_new, const PUNICODE_STRING ObjectName, const ntfsdupe::cfgs::FileCfgEntry *cfg)
 {
     const auto path_bytes = ObjectName->Length - cfg->filename_bytes;
     // copy original objectname (path only)
@@ -15,7 +15,18 @@ void ntfsdupe::hooks::copy_new_target(wchar_t *object_name_new, const PUNICODE_S
 
 }
 
-const ntfsdupe::cfgs::CfgEntry* ntfsdupe::hooks::find_single_obj_dospath(wchar_t *dos_path)
+void ntfsdupe::hooks::copy_new_module_target(wchar_t *dllname_new, const PUNICODE_STRING DllName, const ntfsdupe::cfgs::ModuleCfgEntry *cfg)
+{
+    const auto path_bytes = DllName->Length - cfg->filename_bytes;
+    // copy just the path
+    memcpy(dllname_new, DllName->Buffer, path_bytes);
+    // copy the new target filename
+    memcpy((char*)dllname_new + path_bytes, cfg->target_filename.c_str(), cfg->filename_bytes);
+
+}
+
+
+const ntfsdupe::cfgs::FileCfgEntry* ntfsdupe::hooks::find_single_file_obj_dospath(wchar_t *dos_path)
 {
     if (!dos_path || !dos_path[0]) return nullptr;
 
@@ -32,10 +43,10 @@ const ntfsdupe::cfgs::CfgEntry* ntfsdupe::hooks::find_single_obj_dospath(wchar_t
     if (!conversion) return nullptr;
 
     ntfsdupe::helpers::upper(fullDosPath.get(), fullDosPathBytes / sizeof(wchar_t));
-    return ntfsdupe::cfgs::find_entry(std::wstring_view(fullDosPath.get(), fullDosPathBytes / sizeof(wchar_t)));
+    return ntfsdupe::cfgs::find_file_entry(std::wstring_view(fullDosPath.get(), fullDosPathBytes / sizeof(wchar_t)));
 }
 
-const ntfsdupe::cfgs::CfgEntry* ntfsdupe::hooks::find_single_obj_ntpath(PCWSTR ntpath, ULONG ntpath_bytes)
+const ntfsdupe::cfgs::FileCfgEntry* ntfsdupe::hooks::find_single_file_obj_ntpath(PCWSTR ntpath, ULONG ntpath_bytes)
 {
     if (!ntpath || !ntpath[0] || !ntpath_bytes) return nullptr;
 
@@ -46,17 +57,17 @@ const ntfsdupe::cfgs::CfgEntry* ntfsdupe::hooks::find_single_obj_ntpath(PCWSTR n
     // get dos path
     if (!ntfsdupe::ntapis::NtPathToDosPath(dosPath.get(), &dosPathBytes, ntpath, (USHORT)ntpath_bytes)) return nullptr;
 
-    return find_single_obj_dospath(dosPath.get());
+    return find_single_file_obj_dospath(dosPath.get());
 }
 
-const ntfsdupe::cfgs::CfgEntry* ntfsdupe::hooks::find_single_obj_ntpath(POBJECT_ATTRIBUTES ObjectAttributes)
+const ntfsdupe::cfgs::FileCfgEntry* ntfsdupe::hooks::find_single_file_obj_ntpath(POBJECT_ATTRIBUTES ObjectAttributes)
 {
     if (!ObjectAttributes || !ObjectAttributes->ObjectName) return nullptr;
 
-    return find_single_obj_ntpath(ObjectAttributes->ObjectName->Buffer, ObjectAttributes->ObjectName->Length);
+    return find_single_file_obj_ntpath(ObjectAttributes->ObjectName->Buffer, ObjectAttributes->ObjectName->Length);
 }
 
-const ntfsdupe::cfgs::CfgEntry* ntfsdupe::hooks::find_single_obj_base_handle(MultiQueryOffsets_t& query_info, HANDLE FileHandle, PVOID FileInformation)
+const ntfsdupe::cfgs::FileCfgEntry* ntfsdupe::hooks::find_single_file_obj_base_handle(MultiQueryOffsets_t& query_info, HANDLE FileHandle, PVOID FileInformation)
 {
     // get base path from handle
     IO_STATUS_BLOCK localIoStatus;
@@ -96,10 +107,35 @@ const ntfsdupe::cfgs::CfgEntry* ntfsdupe::hooks::find_single_obj_base_handle(Mul
     );
     // '\0'
     nameTerminated.get()[totalNameBytes / sizeof(wchar_t)] = L'\0';
-    return ntfsdupe::hooks::find_single_obj_dospath(nameTerminated.get());
+    return ntfsdupe::hooks::find_single_file_obj_dospath(nameTerminated.get());
 }
 
-NTSTATUS ntfsdupe::hooks::handle_multi_query(
+const ntfsdupe::cfgs::ModuleCfgEntry* ntfsdupe::hooks::find_module_obj_filename(PUNICODE_STRING  DllName)
+{
+    // find last '/' or '\'
+    USHORT dllname_chars = DllName->Length / sizeof(wchar_t);
+    int filename_idx = dllname_chars - 1;
+    for (; filename_idx > 0; --filename_idx) {
+        if (DllName->Buffer[filename_idx] == L'\\' || DllName->Buffer[filename_idx] == L'/') {
+            ++filename_idx; // point at first char of the filename
+            break;
+        }
+    }
+    if (filename_idx < 0) filename_idx = 0;
+
+    USHORT filename_bytes = DllName->Length - (USHORT)(filename_idx * sizeof(wchar_t));
+    auto name_copy = unique_ptr_stack(wchar_t, filename_bytes);
+    if (name_copy) {
+        memcpy(name_copy.get(), DllName->Buffer + filename_idx, filename_bytes);
+        USHORT filename_chars = dllname_chars - filename_idx;
+        ntfsdupe::helpers::upper(name_copy.get(), filename_chars);
+        return ntfsdupe::cfgs::find_module_entry(std::wstring_view(name_copy.get(), filename_chars));
+    }
+
+    return nullptr;
+}
+
+NTSTATUS ntfsdupe::hooks::handle_file_multi_query(
     MultiQueryOffsets_t& query_info,
     HANDLE FileHandle,
     PVOID FileInformation,
@@ -157,12 +193,12 @@ NTSTATUS ntfsdupe::hooks::handle_multi_query(
         calculatedNodesBytes += currentNodeBytes;
         bool isNodeSkipped = false;
 
-        const ntfsdupe::cfgs::CfgEntry* cfg = ntfsdupe::hooks::find_single_obj_dospath(nameTerminated.get());
+        const ntfsdupe::cfgs::FileCfgEntry* cfg = ntfsdupe::hooks::find_single_file_obj_dospath(nameTerminated.get());
         if (cfg) switch (cfg->mode) {
         // if this is an ignored file then skip it
         // also if original (redirected) file skip it because we should only report the target file (with fixed/restored name)
-        case ntfsdupe::cfgs::Type::original:
-        case ntfsdupe::cfgs::Type::hide: {
+        case ntfsdupe::cfgs::FileType::original:
+        case ntfsdupe::cfgs::FileType::hide: {
             NTFSDUPE_DBG(L"  multi query original/hide '%s'", cfg->original.c_str());
             // if no remaining nodes, this happens at the last node
             // or at the first node when it's the only remaining one
@@ -191,7 +227,7 @@ NTSTATUS ntfsdupe::hooks::handle_multi_query(
         }
         break;
 
-        case ntfsdupe::cfgs::Type::target: { // restore the original name
+        case ntfsdupe::cfgs::FileType::target: { // restore the original name
             NTFSDUPE_DBG(L"  multi query target '%s'", cfg->target.c_str());
             memcpy(
                 (char*)currentNode + query_info.node_filename_offset,
@@ -284,7 +320,14 @@ bool ntfsdupe::hooks::init(void)
         (DetourAttach(&LdrLoadDll_original, LdrLoadDll_hook) != NO_ERROR)) {
             NTFSDUPE_DBG(L"  failed to hook LdrLoadDll()");
             return false;
-        }
+    }
+    
+    LdrGetDllHandle_original = (decltype(LdrGetDllHandle_original))GetProcAddress(NtdllHmod, "LdrGetDllHandle");
+    if (!LdrGetDllHandle_original ||
+        (DetourAttach(&LdrGetDllHandle_original, LdrGetDllHandle_hook) != NO_ERROR)) {
+            NTFSDUPE_DBG(L"  failed to hook LdrGetDllHandle()");
+            return false;
+    }
 
     return DetourTransactionCommit() == NO_ERROR;
 }
@@ -301,5 +344,6 @@ void ntfsdupe::hooks::deinit(void)
     }
 
     DetourDetach(&LdrLoadDll_original, LdrLoadDll_hook);
+    DetourDetach(&LdrGetDllHandle_original, LdrGetDllHandle_hook);
     DetourTransactionCommit();
 }

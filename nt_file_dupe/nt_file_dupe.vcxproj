@@ -33,6 +33,7 @@
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="src\Helpers\dbglog.cpp" />
+    <ClCompile Include="src\Hooks\LdrGetDllHandle_hook\LdrGetDllHandle_hook.cpp" />
     <ClCompile Include="src\Hooks\LdrLoadDll_hook\LdrLoadDll_hook.cpp" />
     <ClCompile Include="src\Hooks\NtCreateDirectoryObjectEx_hook\NtCreateDirectoryObjectEx_hook.cpp" />
     <ClCompile Include="src\Hooks\NtCreateDirectoryObject_hook\NtCreateDirectoryObject_hook.cpp" />
@@ -53,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Helpers\dbglog.hpp" />
+    <ClInclude Include="include\Hooks\LdrGetDllHandle_hook\LdrGetDllHandle_hook.hpp" />
     <ClInclude Include="include\lib_main\lib_main.hpp" />
     <ClInclude Include="libs\Detours\detours.h" />
     <ClInclude Include="libs\Detours\detver.h" />
@@ -173,6 +175,7 @@
       <UseUnicodeForAssemblerListing>true</UseUnicodeForAssemblerListing>
       <ErrorReporting>None</ErrorReporting>
       <UseFullPaths>false</UseFullPaths>
+      <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -204,6 +207,7 @@
       <PrecompiledHeaderFile />
       <UseUnicodeForAssemblerListing>true</UseUnicodeForAssemblerListing>
       <ErrorReporting>None</ErrorReporting>
+      <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -243,6 +247,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>libs;include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <UseFullPaths>false</UseFullPaths>
+      <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -293,6 +298,7 @@
       <CallingConvention>FastCall</CallingConvention>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>libs;include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

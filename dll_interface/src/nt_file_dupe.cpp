@@ -13,7 +13,7 @@ bool NTFSDUPE_DECL ntfsdupe_add_entry(
 	ntfsdupe::itf::Mode mode,
 	const wchar_t *original,
 	const wchar_t *target,
-	bool must_exist
+	bool file_must_exist
 )
 {
 	if (!original || !original[0]) return false;
@@ -21,7 +21,7 @@ bool NTFSDUPE_DECL ntfsdupe_add_entry(
 	std::wstring _target = target && target[0]
 		? std::wstring(target)
 		: std::wstring();
-	return ntfsdupe::cfgs::add_entry((ntfsdupe::cfgs::Mode)mode, original, _target, must_exist);
+	return ntfsdupe::cfgs::add_entry((ntfsdupe::cfgs::Mode)mode, original, _target, file_must_exist);
 }
 
 bool NTFSDUPE_DECL ntfsdupe_load_file(const wchar_t *file)

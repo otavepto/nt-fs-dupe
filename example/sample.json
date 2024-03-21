@@ -1,9 +1,19 @@
 {
   "../../../../example/myfile.txt": {
-    "mode": "redirect",
+    "mode": "file_redirect",
     "to": "../../../../example/myfile.org"
   },
   "../../../../example/hideme.txt": {
-    "mode": "hide"
+    "mode": "file_hide"
+  },
+  "test_dll_prevent_load.dll": {
+    "mode": "module_prevent_load"
+  },
+  "test_dll_redirect_org.dll": {
+    "mode": "module_redirect",
+    "to": "test_dll_redirect_mod.dll"
+  },
+  "test_dll_redirect_mod.dll": {
+    "mode": "module_hide_handle"
   }
 }

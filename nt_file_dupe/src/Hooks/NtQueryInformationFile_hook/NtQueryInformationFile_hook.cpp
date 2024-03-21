@@ -32,14 +32,14 @@ NTSTATUS NTAPI ntfsdupe::hooks::NtQueryInformationFile_hook(
     
     wchar_t* name = nullptr;
     ULONG nameLength = 0;
-    const ntfsdupe::cfgs::CfgEntry* cfg = nullptr;
+    const ntfsdupe::cfgs::FileCfgEntry* cfg = nullptr;
     switch ((FILE_INFORMATION_CLASS_ACTUAL)FileInformationClass) {
     case FILE_INFORMATION_CLASS_ACTUAL::FileNameInformation:
     case FILE_INFORMATION_CLASS_ACTUAL::FileNormalizedNameInformation: {
         auto info = (PFILE_NAME_INFORMATION)FileInformation;
         name = (wchar_t*)&info->FileName;
         nameLength = info->FileNameLength;
-        cfg = ntfsdupe::hooks::find_single_obj_ntpath(name, nameLength);
+        cfg = ntfsdupe::hooks::find_single_file_obj_ntpath(name, nameLength);
         break;
     }
 
@@ -48,7 +48,7 @@ NTSTATUS NTAPI ntfsdupe::hooks::NtQueryInformationFile_hook(
         auto info = (PFILE_ALL_INFORMATION)FileInformation;
         name = (wchar_t*)&info->NameInformation.FileName;
         nameLength = info->NameInformation.FileNameLength;
-        cfg = ntfsdupe::hooks::find_single_obj_ntpath(name, nameLength);
+        cfg = ntfsdupe::hooks::find_single_file_obj_ntpath(name, nameLength);
         break;
     }
 
@@ -69,7 +69,7 @@ NTSTATUS NTAPI ntfsdupe::hooks::NtQueryInformationFile_hook(
     // 1. call NtOpenFile() to get a file handle, which will redirect myfile.dll to myfile.rdr
     // 2. call NtQueryInformationFile() and specify filename as info type
     // in that case we have to change the name back from myfile.rdr to myfile.dll
-    if (cfg->mode == ntfsdupe::cfgs::Type::target) {
+    if (cfg->mode == ntfsdupe::cfgs::FileType::target) {
         NTFSDUPE_DBG(L"ntfsdupe::hooks::NtQueryInformationFile_hook target '%s'", cfg->target.c_str());
         const auto path_bytes = nameLength - cfg->filename_bytes;
         // write original file name

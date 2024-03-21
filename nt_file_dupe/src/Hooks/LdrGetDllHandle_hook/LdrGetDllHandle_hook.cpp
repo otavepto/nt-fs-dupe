@@ -2,28 +2,27 @@
 
 
 namespace ntfsdupe::hooks {
-    decltype(LdrLoadDll_hook) *LdrLoadDll_original = nullptr;
+    decltype(LdrGetDllHandle_hook) *LdrGetDllHandle_original = nullptr;
 }
 
 
-NTSTATUS NTAPI ntfsdupe::hooks::LdrLoadDll_hook(
-    __in_opt  LPVOID            DllCharacteristics,
-    __in_opt  LPDWORD           Unknown,
-    __in      PUNICODE_STRING   DllName,
-    _Out_     HMODULE*          BaseAddress
+NTSTATUS NTAPI ntfsdupe::hooks::LdrGetDllHandle_hook(
+    _In_opt_ PWSTR 	      DllPath,
+    _In_opt_ PULONG  	  DllCharacteristics,
+    _In_ PUNICODE_STRING  DllName,
+    _Out_ PHANDLE         DllHandle
 )
 {
     if (DllName && DllName->Length && DllName->Buffer && DllName->Buffer[0]) {
-        // try redirection/hiding first
         auto cfg = ntfsdupe::hooks::find_module_obj_filename(DllName);
         if (cfg) switch (cfg->mode)
         {
-        // in the case 'hide_handle' we just want to hide it in memory, not prevent loading
-
-        case ntfsdupe::cfgs::ModuleType::prevent_load:
-        case ntfsdupe::cfgs::ModuleType::target: { // target files are invisible to the process
+        // we only care about this case
+        case ntfsdupe::cfgs::ModuleType::prevent_load: // this doesn't make sense here, but just in case
+        case ntfsdupe::cfgs::ModuleType::target: // target modules are invisible to the process
+        case ntfsdupe::cfgs::ModuleType::hide_handle: {
             NTFSDUPE_DBG(
-                L"ntfsdupe::hooks::LdrLoadDll_hook prevent_load/target '%s'",
+                L"ntfsdupe::hooks::LdrGetDllHandle_hook prevent_load/target/hide_handle '%s'",
                 std::wstring(DllName->Buffer, DllName->Length / sizeof(wchar_t)).c_str()
             );
             // this is what the original API returns when you pass a dll name that doesn't exist
@@ -32,7 +31,7 @@ NTSTATUS NTAPI ntfsdupe::hooks::LdrLoadDll_hook(
 
         case ntfsdupe::cfgs::ModuleType::original: {
             NTFSDUPE_DBG(
-                L"ntfsdupe::hooks::LdrLoadDll_hook original '%s'",
+                L"ntfsdupe::hooks::LdrGetDllHandle_hook original '%s'",
                 std::wstring(DllName->Buffer, DllName->Length / sizeof(wchar_t)).c_str()
             );
             // it would be cheaper to just manipulate the original str, but not sure if that's safe
@@ -58,11 +57,11 @@ NTSTATUS NTAPI ntfsdupe::hooks::LdrLoadDll_hook(
                             // set new buffer
                             DllName->Buffer = dllname_new.get();
                             // call original API
-                            const auto result = LdrLoadDll_original(
+                            const auto result = LdrGetDllHandle_original(
+                                DllPath,
                                 DllCharacteristics,
-                                Unknown,
                                 DllName,
-                                BaseAddress
+                                DllHandle
                             );
                             // restore original buffer
                             DllName->Buffer = buffer_backup;
@@ -78,7 +77,7 @@ NTSTATUS NTAPI ntfsdupe::hooks::LdrLoadDll_hook(
 
         default: break;
         }
-
+        
         // if redirection/hiding didn't do anything, then bypass this dll to avoid later redirection by NtOpenFile or NtCreateFile
         auto terminated_name = unique_ptr_stack(wchar_t, DllName->Length + sizeof(wchar_t));
         if (terminated_name) {
@@ -96,11 +95,11 @@ NTSTATUS NTAPI ntfsdupe::hooks::LdrLoadDll_hook(
                         ntfsdupe::helpers::upper(fullDosPath.get(), fullDosPathBytes / sizeof(wchar_t));
                         std::wstring_view wsv(fullDosPath.get(), fullDosPathBytes / sizeof(wchar_t));
                         ntfsdupe::cfgs::add_bypass(wsv);
-                        const auto result = LdrLoadDll_original(
+                        const auto result = LdrGetDllHandle_original(
+                            DllPath,
                             DllCharacteristics,
-                            Unknown,
                             DllName,
-                            BaseAddress
+                            DllHandle
                         );
                         ntfsdupe::cfgs::remove_bypass(wsv);
                         return result;
@@ -111,10 +110,10 @@ NTSTATUS NTAPI ntfsdupe::hooks::LdrLoadDll_hook(
     }
 
     // if everything above failed
-    return LdrLoadDll_original(
+    return LdrGetDllHandle_original(
+        DllPath,
         DllCharacteristics,
-        Unknown,
         DllName,
-        BaseAddress
+        DllHandle
     );
 }

@@ -25,7 +25,7 @@ bool ntfsdupe::init()
 
 	// hide the log file
 #if !defined(NT_FS_DUPE_RELEASE)
-	ntfsdupe::cfgs::add_entry(ntfsdupe::cfgs::Mode::hide, ntfsdupe::helpers::get_module_fullpath(nullptr) + L".NT_FS_DUPE.log");
+	ntfsdupe::cfgs::add_entry(ntfsdupe::cfgs::Mode::file_hide, ntfsdupe::helpers::get_module_fullpath(nullptr) + L".NT_FS_DUPE.log");
 #endif
 
 	return true;

@@ -31,11 +31,19 @@ BOOL APIENTRY DllMain(
         std::wstring my_path_str(ntfsdupe::helpers::get_module_fullpath(hModule));
         if (my_path_str.empty()) return FALSE;
 
-        // hide ourself
-        if (!ntfsdupe::cfgs::add_entry(ntfsdupe::cfgs::Mode::hide, my_path_str)) return FALSE;
+        // hide ourself (on disk)
+        if (!ntfsdupe::cfgs::add_entry(ntfsdupe::cfgs::Mode::file_hide, my_path_str)) return FALSE;
+
+        auto my_path = std::filesystem::path(my_path_str);
+
+        // hide ourself (in memory)
+        if (!ntfsdupe::cfgs::add_entry(ntfsdupe::cfgs::Mode::module_hide_handle, my_path.filename().wstring())) return FALSE;
+        if (!ntfsdupe::cfgs::add_entry(ntfsdupe::cfgs::Mode::module_hide_handle, my_path.stem().wstring())) return FALSE;
+        
+        if (!ntfsdupe::cfgs::add_entry(ntfsdupe::cfgs::Mode::module_prevent_load, my_path.filename().wstring())) return FALSE;
+        if (!ntfsdupe::cfgs::add_entry(ntfsdupe::cfgs::Mode::module_prevent_load, my_path.stem().wstring())) return FALSE;
 
         // add <dll name>.json to the list
-        auto my_path = std::filesystem::path(my_path_str);
         initial_files.insert(initial_files.begin(), my_path.stem().wstring() + L".json");
 
         // try to load some files by default
@@ -44,7 +52,7 @@ BOOL APIENTRY DllMain(
             auto cfg_file = (my_dir / file).wstring();
             if (ntfsdupe::cfgs::load_file(cfg_file.c_str())) {
                 // hiding this file isn't really critical, right?
-                ntfsdupe::cfgs::add_entry(ntfsdupe::cfgs::Mode::hide, cfg_file);
+                ntfsdupe::cfgs::add_entry(ntfsdupe::cfgs::Mode::file_hide, cfg_file);
                 break;
             }
         }

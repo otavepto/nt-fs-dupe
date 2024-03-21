@@ -131,10 +131,10 @@ NTSTATUS NTAPI ntfsdupe::hooks::NtQueryDirectoryFileEx_hook(
 
     // if the caller was querying a single object (via FindFirstFileExW() for example)
     if (!currentNodeBytes) {
-        auto cfg = ntfsdupe::hooks::find_single_obj_base_handle(query_info, FileHandle, FileInformation);
+        auto cfg = ntfsdupe::hooks::find_single_file_obj_base_handle(query_info, FileHandle, FileInformation);
         if (cfg) switch (cfg->mode) {
-        case ntfsdupe::cfgs::Type::target:
-        case ntfsdupe::cfgs::Type::hide: {
+        case ntfsdupe::cfgs::FileType::target:
+        case ntfsdupe::cfgs::FileType::hide: {
             NTFSDUPE_DBG(
                 L"ntfsdupe::hooks::NtQueryDirectoryFileEx_hook hide/target '%s'",
                 std::wstring(
@@ -147,7 +147,7 @@ NTSTATUS NTAPI ntfsdupe::hooks::NtQueryDirectoryFileEx_hook(
         }
         break;
 
-        case ntfsdupe::cfgs::Type::original: { // then redirect to target
+        case ntfsdupe::cfgs::FileType::original: { // then redirect to target
             NTFSDUPE_DBG(L"ntfsdupe::hooks::NtQueryDirectoryFileEx_hook original '%s'", cfg->original.c_str());
             // duplicate the handle
             auto handle_dup = ntfsdupe::ntapis::DuplicateHandle(FileHandle);
@@ -198,5 +198,5 @@ NTSTATUS NTAPI ntfsdupe::hooks::NtQueryDirectoryFileEx_hook(
         return result;
     }
 
-    return ntfsdupe::hooks::handle_multi_query(query_info, FileHandle, FileInformation, IoStatusBlock, result);
+    return ntfsdupe::hooks::handle_file_multi_query(query_info, FileHandle, FileInformation, IoStatusBlock, result);
 }

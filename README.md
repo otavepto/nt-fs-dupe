@@ -1,5 +1,5 @@
 # Nt Filesystem Dupe  
-A library for file redirection and hiding by hooking various Nt APIs.  
+A library for file & module redirection and hiding, by hooking various Nt APIs.  
 This project is inspired by `CODEX` Steam emu and based on reversing it. Credits to them.
 
 ---
@@ -8,54 +8,102 @@ This project is inspired by `CODEX` Steam emu and based on reversing it. Credits
 The solution is divided into 3 projects:
 1. `nt_file_dupe`: The actual library, this is a static library (`.lib`)
 2. `dll_interface`: A thin wrapper `.dll` project around the static library, exporting the necessary functions
-3. `tests`: A simple console app to test the library
+3. `testxxx`: A simple console app to test the library + helpers
 
 ## JSON file format:
 ```json
 {
   "myfile.txt": {
-    "mode": "redirect",
+    "mode": "file_redirect",
     "to": "myfile.org",
-    "must_exist": true
+    "file_must_exist": true
   },
   "path/myfile_22.txt": {
-    "mode": "redirect",
+    "mode": "file_redirect",
     "to": "path/myfile_22.org",
   },
   "../../folder/some_file.txt": {
-    "mode": "redirect",
+    "mode": "file_redirect",
     "to": "../../folder/some_file.org",
   },
+
   "hideme.txt": {
-    "mode": "hide"
+    "mode": "file_hide"
   },
   "../hideme_22.txt": {
-    "mode": "hide"
+    "mode": "file_hide"
+  },
+
+  "prevent_me.dll": {
+    "mode": "module_prevent_load"
+  },
+  "prevent_me": {
+    "mode": "module_prevent_load"
+  },
+
+  "my_module_org.dll": {
+    "mode": "module_redirect",
+    "to": "my_module_mod.dll"
+  },
+  "my_module_org": {
+    "mode": "module_redirect",
+    "to": "my_module_mod"
   }
 }
 ```
-Each JSON key is considered the original file, its path could be absolute or relative.  
+Each JSON key is considered the *original* file, the value/object for that key defines the action for the original file.  
+The entry type is determined by the `mode` JSON key.
+* `mode`  
+  
+  ---
 
-The value/object for that key defines the action for the original file:
-* `mode`: could be `redirect` or `hide`
-* `to`: only useful when `mode` = `redirect`, this defines which target file to redirect the original file to
-* `must_exist` (default = `false`): when set to `true`, the JSON entry will be skipped if the original file doesn't exist, or the target file doesn't exist in `redirect` mode
+  - `file_redirect`  
+    Redirect original file creation/opening `to` a target file.  
+    Target files are always hidden.
+  - `file_hide`  
+    Hide the file, as if it doesn't exist on disk.
+
+  ---
+
+  - `module_prevent_load`  
+    Prevent loading the module via `LoadLibrary()` and its variants.
+  - `module_redirect`  
+    Redirect the loading operation `to` another target module.  
+    Target modules are always hidden and cannot be loaded by the process.
+  - `module_hide_handle`  
+    Prevent `GetModuleHandle()` from succeeding, this won't affect `LoadLibrary()` and its variants.  
+    As if the module doesn't exist in the current process memory.
+
+* `to`  
+  Defines which target file/module to redirect the original file/module to.  
+  Only useful when `mode` is:
+  - `file_redirect`
+  - `module_redirect`
+
+* `file_must_exist` (default = `false`)  
+  When set to `true`, the JSON entry will be skipped if the original file doesn't exist, or the target file doesn't exist in `file_redirect` mode
 
 Check the example [sample.json](./example/sample.json)
 
 ## Behavior
-Relative paths will be relative to the **location of the current `.exe`**, not the current directory.  
+In case this is a **file** entry, the paths to the original or target files could be absolute or relative.  
+Relative paths will be relative to the **location of the current `.exe`**, not the current directory.
 
-Both the original and target files must:  
-- Have the same filename length
-- Exist in the same dir  
+In case this is a **module** entry, the paths to the original or target modules must be just their filenames.  
 
-Target files are hidden by default, for example, in the JSON file defined above, `myfile.org` will be hidden.
+Both the original and target files/modules must have the same filename length.  
+Additionally, if this is a **file** entry, they must exist in the same dir.  
 
-If `must_exist` = `true`, then JSON entries with a missing original file will be ignored without an error.  
+Target files/modules are hidden by default, for example, in the JSON file defined above:
+* `myfile.org` Will be hidden and cannot be opened/created
+* `my_module_mod.dll` Will be hidden and cannot be loaded
 
-The dll will try to load one of the following files upon loading with that order:
-* A JSON file with the same name as the `.dll`
+If `file_must_exist` = `true`, then this JSON entry will be ignored without an error if:
+* The original file was missing
+* The `mode` = `file_redirect` and the target file, defined by the JSON key `to`, is missing
+
+The dll will try to load only one of the following files upon startup in that order:
+* A JSON file with the same name as the `.dll` itself
 * `nt_file_dupe.json`
 * `nt_file_dupe_config.json`
 * `nt_fs_dupe.json`
@@ -63,7 +111,10 @@ The dll will try to load one of the following files upon loading with that order
 * `nt_dupe.json`
 * `nt_dupe_config.json`  
 
-Any of these files, if needed to be loaded, must exist **beside** the `.dll`, not the current running `.exe`
+Any of these files must exist **beside** the `.dll`, not the current running `.exe`
+
+Upon startup, the dll will try to hide itself, both on disk and in memory.  
+Additionally in the debug build, it will try to hide the log file on disk.  
 
 ## How use the pre-built .dll:
 1. Create a `.json` file with some entries as shown above
@@ -72,7 +123,7 @@ Any of these files, if needed to be loaded, must exist **beside** the `.dll`, no
 4. Load the `.dll` inside your target, either modify the imports table with something like `CFF Explorer`, or use any dll loader/injector  
 
 
-Note that `ntfsdupe::cfgs::add_entry()` or `ntfsdupe_add_entry()` are not thread safe.  
+Note that the functions to add entries are not thread safe.  
 
 
 ## How to link and use as a static lib (.lib):
@@ -106,7 +157,7 @@ Note that `ntfsdupe::cfgs::add_entry()` or `ntfsdupe_add_entry()` are not thread
 
    int main() {
        ntfsdupe_load_file(L"myfile.json");
-       ntfsdupe_add_entry(ntfsdupe::itf::Mode::hide, L"some_file.dll", nullptr);
+       ntfsdupe_add_entry(ntfsdupe::itf::Mode::file_hide, L"some_file.dll", nullptr);
        return 0;
    }
    ```

@@ -284,7 +284,357 @@ void NtQueryInformationFile_tests()
 
 }
 
+void loadlib_prevent_tests()
+{
+    // absolute
+    auto mod = std::filesystem::current_path() / "bin" / "Debug" /
+#if defined _WIN64
+        "x64"
+#else
+        "Win32"
+#endif
+        / "test_dll_prevent_load" / "test_dll_prevent_load.dll";
+    std::cout << "loading absolute: " << mod << std::endl;
 
+    auto addr = LoadLibraryA(mod.string().c_str());
+    std::cout << "LoadLibraryA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryW(mod.wstring().c_str());
+    std::cout << "LoadLibraryW " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+    
+    addr = LoadLibraryExA(mod.string().c_str(), NULL, 0);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+    
+    addr = LoadLibraryExA(mod.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_APPLICATION_DIR);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+    
+    addr = LoadLibraryExA(mod.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+    
+    addr = LoadLibraryExA(mod.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+    
+    addr = LoadLibraryExA(mod.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+    
+    addr = LoadLibraryExA(mod.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_USER_DIRS);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+    
+    addr = LoadLibraryExA(mod.string().c_str(), NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+    
+    addr = LoadLibraryExA(mod.string().c_str(), NULL, LOAD_LIBRARY_SAFE_CURRENT_DIRS);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+    
+    addr = LoadLibraryExW(mod.wstring().c_str(), NULL, 0);
+    std::cout << "LoadLibraryExW " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+
+    // relative
+    auto mod_rel = mod.filename();
+    std::cout << "loading relative: " << mod_rel << std::endl;
+
+    addr = LoadLibraryA(mod_rel.string().c_str());
+    std::cout << "LoadLibraryA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryW(mod_rel.wstring().c_str());
+    std::cout << "LoadLibraryW " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod_rel.string().c_str(), NULL, 0);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod_rel.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_APPLICATION_DIR);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod_rel.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod_rel.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod_rel.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod_rel.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_USER_DIRS);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod_rel.string().c_str(), NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod_rel.string().c_str(), NULL, LOAD_LIBRARY_SAFE_CURRENT_DIRS);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExW(mod_rel.wstring().c_str(), NULL, 0);
+    std::cout << "LoadLibraryExW " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+
+}
+
+void loadlib_redirect_tests()
+{
+    // absolute
+    auto mod = std::filesystem::current_path() / "bin" / "Debug" /
+#if defined _WIN64
+        "x64"
+#else
+        "Win32"
+#endif
+        / "test_dll_redirect" / "test_dll_redirect_org.dll";
+    std::cout << "loading absolute: " << mod << std::endl;
+
+    auto addr = LoadLibraryA(mod.string().c_str());
+    std::cout << "LoadLibraryA " << (int)(addr != nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryW(mod.wstring().c_str());
+    std::cout << "LoadLibraryW " << (int)(addr != nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod.string().c_str(), NULL, 0);
+    std::cout << "LoadLibraryExA " << (int)(addr != nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_APPLICATION_DIR);
+    std::cout << "LoadLibraryExA " << (int)(addr != nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+    std::cout << "LoadLibraryExA " << (int)(addr != nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR);
+    std::cout << "LoadLibraryExA " << (int)(addr != nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
+    std::cout << "LoadLibraryExA " << (int)(addr != nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_USER_DIRS);
+    std::cout << "LoadLibraryExA " << (int)(addr != nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod.string().c_str(), NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+    std::cout << "LoadLibraryExA " << (int)(addr != nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod.string().c_str(), NULL, LOAD_LIBRARY_SAFE_CURRENT_DIRS);
+    std::cout << "LoadLibraryExA " << (int)(addr != nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExW(mod.wstring().c_str(), NULL, 0);
+    std::cout << "LoadLibraryExW " << (int)(addr != nullptr) << std::endl;
+    //FreeLibrary(addr);
+    // don't free here because the relative will fail
+
+
+    // relative
+    auto mod_rel = mod.filename();
+    std::cout << "loading relative: " << mod_rel << std::endl;
+
+    addr = LoadLibraryA(mod_rel.string().c_str());
+    std::cout << "LoadLibraryA " << (int)(addr != nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryW(mod_rel.wstring().c_str());
+    std::cout << "LoadLibraryW " << (int)(addr != nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod_rel.string().c_str(), NULL, 0);
+    std::cout << "LoadLibraryExA " << (int)(addr != nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod_rel.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_APPLICATION_DIR);
+    std::cout << "LoadLibraryExA " << (int)(addr != nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod_rel.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+    std::cout << "LoadLibraryExA " << (int)(addr != nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod_rel.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR);
+    std::cout << "LoadLibraryExA " << (int)(addr != nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod_rel.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
+    std::cout << "LoadLibraryExA " << (int)(addr != nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod_rel.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_USER_DIRS);
+    std::cout << "LoadLibraryExA " << (int)(addr != nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod_rel.string().c_str(), NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+    std::cout << "LoadLibraryExA " << (int)(addr != nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod_rel.string().c_str(), NULL, LOAD_LIBRARY_SAFE_CURRENT_DIRS);
+    std::cout << "LoadLibraryExA " << (int)(addr != nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExW(mod_rel.wstring().c_str(), NULL, 0);
+    std::cout << "LoadLibraryExW " << (int)(addr != nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    // the last absolute one
+    FreeLibrary(addr);
+
+}
+
+// target modules should be invisible to the process
+void loadlib_redirect_target_tests()
+{
+    // absolute
+    auto mod = std::filesystem::current_path() / "bin" / "Debug" /
+#if defined _WIN64
+        "x64"
+#else
+        "Win32"
+#endif
+        / "test_dll_redirect" / "test_dll_redirect_mod.dll";
+    std::cout << "loading absolute: " << mod << std::endl;
+
+    auto addr = LoadLibraryA(mod.string().c_str());
+    std::cout << "LoadLibraryA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryW(mod.wstring().c_str());
+    std::cout << "LoadLibraryW " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod.string().c_str(), NULL, 0);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_APPLICATION_DIR);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_USER_DIRS);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod.string().c_str(), NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod.string().c_str(), NULL, LOAD_LIBRARY_SAFE_CURRENT_DIRS);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExW(mod.wstring().c_str(), NULL, 0);
+    std::cout << "LoadLibraryExW " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+
+    // relative
+    auto mod_rel = mod.filename();
+    std::cout << "loading relative: " << mod_rel << std::endl;
+
+    addr = LoadLibraryA(mod_rel.string().c_str());
+    std::cout << "LoadLibraryA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryW(mod_rel.wstring().c_str());
+    std::cout << "LoadLibraryW " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod_rel.string().c_str(), NULL, 0);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod_rel.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_APPLICATION_DIR);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod_rel.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod_rel.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod_rel.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod_rel.string().c_str(), NULL, LOAD_LIBRARY_SEARCH_USER_DIRS);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod_rel.string().c_str(), NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExA(mod_rel.string().c_str(), NULL, LOAD_LIBRARY_SAFE_CURRENT_DIRS);
+    std::cout << "LoadLibraryExA " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+    addr = LoadLibraryExW(mod_rel.wstring().c_str(), NULL, 0);
+    std::cout << "LoadLibraryExW " << (int)(addr == nullptr) << std::endl;
+    FreeLibrary(addr);
+
+}
+
+void loadlib_hide_handle_tests()
+{
+    // absolute
+    auto mod = std::filesystem::current_path() / "bin" / "Debug" /
+#if defined _WIN64
+        "x64"
+#else
+        "Win32"
+#endif
+        / "test_dll_redirect" / "test_dll_redirect_org.dll";
+    std::cout << "loading absolute: " << mod << std::endl;
+
+    auto addr = LoadLibraryA(mod.string().c_str());
+    std::cout << "LoadLibraryA " << (int)(addr != nullptr) << std::endl;
+
+    auto mod_addr = GetModuleHandleA(mod.string().c_str());
+    std::cout << "GetModuleHandleA " << (int)(addr != nullptr) << std::endl;
+
+    FreeLibrary(addr);
+
+    GetModuleHandleA("kernel32");
+    GetModuleHandleA("kernel32.dll");
+
+}
 
 
 
@@ -292,21 +642,39 @@ int main(int argc, char** argv)
 {
     if (!ntfsdupe::init()) return 1;
 
-    std::filesystem::current_path(ntfsdupe::cfgs::get_proc_dir() + L"../../../../");
+    std::filesystem::current_path(ntfsdupe::cfgs::get_exe_dir() + L"../../../../");
     std::cout << "Current dir: '" << std::filesystem::current_path().u8string() << "'" << std::endl;
     if (!ntfsdupe::cfgs::load_file(L"example/sample.json")) return 1;
 
-    std::cout << "================== CreateFileA_tests" << std::endl;
+    std::cout << "\n================== CreateFileA_tests" << std::endl;
     CreateFileA_tests();
-    std::cout << "================== GetFileAttributesA_tests" << std::endl;
-    GetFileAttributesA_tests();
-    std::cout << "================== GetFileSize_tests" << std::endl;
-    GetFileSize_tests();
-    std::cout << "================== FindFirstFileExW_tests" << std::endl;
-    FindFirstFileExW_tests();
-    std::cout << "================== std_ifstream_tests" << std::endl;
-    std_ifstream_tests();
 
+    std::cout << "\n================== GetFileAttributesA_tests" << std::endl;
+    GetFileAttributesA_tests();
+
+    std::cout << "\n================== GetFileSize_tests" << std::endl;
+    GetFileSize_tests();
+
+    std::cout << "\n================== FindFirstFileExW_tests" << std::endl;
+    FindFirstFileExW_tests();
+
+    std::cout << "\n================== std_ifstream_tests" << std::endl;
+    std_ifstream_tests();
+    
+    std::cout << "\n================== loadlib_prevent_tests" << std::endl;
+    loadlib_prevent_tests();
+    
+    std::cout << "\n================== loadlib_redirect_tests" << std::endl;
+    loadlib_redirect_tests();
+    
+    std::cout << "\n================== loadlib_redirect_target_tests" << std::endl;
+    loadlib_redirect_target_tests();
+    
+    std::cout << "\n================== loadlib_hide_handle_tests" << std::endl;
+    loadlib_hide_handle_tests();
+
+    //GetModuleHandleA(NULL);
+    //GetModuleHandleA("example/hideme.txt");
     //LoadLibraryA("example/hideme.txt");
     ntfsdupe::deinit();
 

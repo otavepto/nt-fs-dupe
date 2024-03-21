@@ -67,6 +67,9 @@
     <Filter Include="lib_main">
       <UniqueIdentifier>{d001949c-3fb8-4277-9bec-dd5950f9069d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Hooks\LdrGetDllHandle">
+      <UniqueIdentifier>{880696e8-c988-41e3-afcb-88fe2a5f46f7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Hooks\Hooks.cpp">
@@ -156,6 +159,9 @@
     <ClCompile Include="src\lib_main\lib_main.cpp">
       <Filter>lib_main</Filter>
     </ClCompile>
+    <ClCompile Include="src\Hooks\LdrGetDllHandle_hook\LdrGetDllHandle_hook.cpp">
+      <Filter>Hooks\LdrGetDllHandle</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="libs\Json\nlohmann\json.hpp">
@@ -226,6 +232,9 @@
     </ClInclude>
     <ClInclude Include="include\lib_main\lib_main.hpp">
       <Filter>lib_main</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Hooks\LdrGetDllHandle_hook\LdrGetDllHandle_hook.hpp">
+      <Filter>Hooks\LdrGetDllHandle</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

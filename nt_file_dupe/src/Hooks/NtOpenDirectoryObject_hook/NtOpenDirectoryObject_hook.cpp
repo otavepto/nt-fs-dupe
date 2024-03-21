@@ -12,11 +12,11 @@ NTSTATUS NTAPI ntfsdupe::hooks::NtOpenDirectoryObject_hook(
     __in  POBJECT_ATTRIBUTES ObjectAttributes
 )
 {
-    auto cfg = find_single_obj_ntpath(ObjectAttributes);
+    auto cfg = find_single_file_obj_ntpath(ObjectAttributes);
     if (cfg) {
         switch (cfg->mode) {
-        case ntfsdupe::cfgs::Type::hide:
-        case ntfsdupe::cfgs::Type::target: { // target files are invisible to the process
+        case ntfsdupe::cfgs::FileType::hide:
+        case ntfsdupe::cfgs::FileType::target: { // target files are invisible to the process
             NTFSDUPE_DBG(
                 L"ntfsdupe::hooks::NtOpenDirectoryObject_hook hide/target '%s'",
                 std::wstring(ObjectAttributes->ObjectName->Buffer, ObjectAttributes->ObjectName->Length / sizeof(wchar_t)).c_str()
@@ -24,12 +24,12 @@ NTSTATUS NTAPI ntfsdupe::hooks::NtOpenDirectoryObject_hook(
             return STATUS_OBJECT_NAME_NOT_FOUND;
         }
 
-        case ntfsdupe::cfgs::Type::original: {
+        case ntfsdupe::cfgs::FileType::original: {
             NTFSDUPE_DBG(L"ntfsdupe::hooks::NtOpenDirectoryObject_hook original '%s'", cfg->original.c_str());
             // it would be cheaper to just manipulate the original str, but not sure if that's safe
             auto object_name_new = unique_ptr_stack(wchar_t, ObjectAttributes->ObjectName->Length);
             if (object_name_new) {
-                copy_new_target(object_name_new.get(), ObjectAttributes->ObjectName, cfg);
+                copy_new_file_target(object_name_new.get(), ObjectAttributes->ObjectName, cfg);
 
                 // backup original buffer
                 const auto buffer_backup = ObjectAttributes->ObjectName->Buffer;

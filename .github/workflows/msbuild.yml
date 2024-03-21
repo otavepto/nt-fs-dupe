@@ -36,6 +36,7 @@ jobs:
       working-directory: ${{ github.workspace }}
       run: msbuild /nologo /target:Clean;dll_interface:Rebuild /m /p:Configuration=Release,Platform=x86 nt_file_dupe.sln
 
+
 ### build (debug mode x64)
     - name: Build debug mode (x64)
       shell: cmd
@@ -49,11 +50,20 @@ jobs:
       run: msbuild /nologo /target:Clean;dll_interface:Rebuild /m /p:Configuration=Debug,Platform=x86 nt_file_dupe.sln
 
 
+### copy example json
+    - name: Copy example JSON
+      shell: cmd
+      working-directory: ${{ github.workspace }}
+      run: |
+        copy /y example\sample.json bin\Debug\example.json
+        copy /y example\sample.json bin\Release\example.json
+
+
 ### upload artifact/package to github Actions (release mode)
     - name: Upload build package (release)
       uses: actions/upload-artifact@v4
       with:
-        name: "build-release-${{ github.sha }}"
+        name: "ntfsdupe-build-release-${{ github.sha }}"
         path: bin/Release/
         if-no-files-found: 'error'
         compression-level: 9
@@ -63,7 +73,7 @@ jobs:
     - name: Upload build package (debug)
       uses: actions/upload-artifact@v4
       with:
-        name: "build-debug-${{ github.sha }}"
+        name: "ntfsdupe-build-debug-${{ github.sha }}"
         path: bin/Debug/
         if-no-files-found: 'error'
         compression-level: 9
